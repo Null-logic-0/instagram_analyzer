@@ -333,3 +333,29 @@ model has no influence on it.
 | `npx tsx index.ts "<url>"` | Audit a specific URL |
 | `npm run ai-harness` | Offline test with synthetic data |
 | `npm run typecheck` | Type-check the project |
+
+---
+
+## License
+
+Copyright (C) 2026 Luka Tchelidze
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the **GNU General Public License** as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the [GNU General Public License](LICENSE) for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+
+### What this means in practice
+
+- Anyone may use, study, change and share this software
+- If you distribute it, modified or not, you must ship the source under the
+  same GPL-3.0 terms
+- There is no warranty
