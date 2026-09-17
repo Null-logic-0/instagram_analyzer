@@ -5,12 +5,12 @@ import type { Stats } from "./stats.js";
 import type { Finding, Severity } from "./types.js";
 import { NA, c, fmtBool, fmtInt, fmtNum, fmtPct, fmtText } from "./util.js";
 
-const WIDTH = 60;
-const RULE = "=".repeat(WIDTH);
+export const WIDTH = 60;
+export const RULE = "=".repeat(WIDTH);
 
-const out = (line = "") => console.log(line);
+export const out = (line = "") => console.log(line);
 
-function section(title: string): void {
+export function section(title: string): void {
   out();
   out(c.cyan(RULE));
   out(c.bold(c.cyan(title)));
@@ -18,18 +18,18 @@ function section(title: string): void {
   out();
 }
 
-function kv(label: string, value: string, pad = 24): void {
+export function kv(label: string, value: string, pad = 24): void {
   out(`${label.padEnd(pad)}${value}`);
 }
 
-function severityTag(s: Severity): string {
+export function severityTag(s: Severity): string {
   const tag = `[${s}]`.padEnd(9);
   if (s === "HIGH") return c.red(tag);
   if (s === "MEDIUM") return c.yellow(tag);
   return c.green(tag);
 }
 
-function wrap(text: string, width = WIDTH, indent = ""): string[] {
+export function wrap(text: string, width = WIDTH, indent = ""): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = "";
@@ -46,12 +46,12 @@ function wrap(text: string, width = WIDTH, indent = ""): string[] {
   return lines;
 }
 
-function printWrapped(text: string, indent = ""): void {
+export function printWrapped(text: string, indent = ""): void {
   for (const l of wrap(text, WIDTH, indent)) out(l);
 }
 
 /** Prints "- text", aligning wrapped continuation lines under the text. */
-function printBullet(text: string, indent = ""): void {
+export function printBullet(text: string, indent = ""): void {
   wrap(text, WIDTH - indent.length - 2).forEach((l, i) => out(`${indent}${i === 0 ? "- " : "  "}${l}`));
 }
 

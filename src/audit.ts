@@ -5,10 +5,12 @@ import {
   analyzeVideos,
   type AnalysisBundle,
 } from "./analysis.js";
-import { REQUEST_DELAY_MS } from "./config.js";
+import { AI_ENABLED, REQUEST_DELAY_MS } from "./config.js";
 import { note } from "./diagnostics.js";
 import { CollectionError, friendlyFailure } from "./errors.js";
 import { isStopped } from "./http.js";
+import { analyzeInfluencerWithAI } from "./ai/fraud.js";
+import { printAiReport } from "./ai/report.js";
 import { buildFindings } from "./indicators.js";
 import { collectProfile, emptyProfile, parseProfileUrl } from "./profile.js";
 import { discoverPosts, enrichPosts } from "./posts.js";
@@ -99,5 +101,18 @@ export async function runAudit(input: string): Promise<void> {
     commentAnalysis: analyzeComments(comments),
   };
 
-  printReport(bundle, buildFindings(bundle));
+  const findings = buildFindings(bundle);
+  printReport(bundle, findings);
+
+  // The AI layer interprets the evidence the deterministic analysis produced.
+  // It runs last and cannot affect anything above it: a failure here still
+  // leaves the full statistical report on screen.
+  if (AI_ENABLED) {
+    write(c.dim("  Running AI fraud analysis...\n"));
+    try {
+      printAiReport(await analyzeInfluencerWithAI(bundle, findings));
+    } catch (err) {
+      write(c.yellow(`  AI analysis failed: ${err instanceof Error ? err.message : String(err)}\n`));
+    }
+  }
 }
