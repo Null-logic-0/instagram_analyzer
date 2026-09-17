@@ -23,7 +23,6 @@ interface RequestOptions {
   referer?: string;
 }
 
-/** Set once Instagram tells this client to stop. Suppresses further requests. */
 let stopped: { kind: FailureKind; message: string } | null = null;
 
 export function isStopped(): { kind: FailureKind; message: string } | null {
@@ -54,9 +53,7 @@ function headersFor(mode: IgRequestMode, referer?: string): Record<string, strin
     };
   }
 
-  // Instagram returns an empty client-side shell to requests that omit the
-  // ordinary top-level navigation headers a browser always sends. The embed
-  // endpoint is the same: as an iframe subresource it serves nothing useful.
+  // without these instagram sends an empty page with no data in it
   return {
     ...base,
     accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -107,8 +104,7 @@ export async function httpGet(url: string, init: RequestOptions = {}): Promise<H
       const body = await res.text();
       const kind = classifyStatus(res.status, body);
 
-      // 429 and 403 are Instagram telling this client to stop. That is terminal
-      // for the whole run: no retry, no workaround.
+      // instagram is telling us to stop. we stop, no retry.
       if (kind === "RATE_LIMITED" || kind === "BLOCKED") {
         stopped = {
           kind,
@@ -120,8 +116,7 @@ export async function httpGet(url: string, init: RequestOptions = {}): Promise<H
         throw new CollectionError(kind, stopped.message);
       }
 
-      // 401 applies to one resource only, so other public documents may still
-      // be served and the run continues.
+      // only this one url needs a login. other pages may still work.
       if (kind === "LOGIN_REQUIRED") {
         throw new CollectionError("LOGIN_REQUIRED", `an authenticated session is required for ${pathOf(url)}`);
       }

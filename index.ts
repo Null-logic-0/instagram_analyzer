@@ -1,13 +1,8 @@
 #!/usr/bin/env npx tsx
-/**
- * Instagram influencer audit.
- * npx tsx index.ts
- */
 
 import { runAudit } from "./src/audit.js";
 import { c } from "./src/util.js";
 
-// The only line you need to change.
 const USERNAME = "influencer-instagram-username";
 const INSTAGRAM_PROFILE_URL = `https://www.instagram.com/${USERNAME}/`;
 

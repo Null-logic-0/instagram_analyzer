@@ -26,7 +26,6 @@ import { c, parseHumanNumber, toIso, toNumber, unique } from "./util.js";
 function classifyPost(node: Json): PostData["type"] {
   const typename = String(node.__typename ?? node.typename ?? "");
   const productType = String(node.product_type ?? "");
-  // media_type: 1 = image, 2 = video, 8 = carousel.
   const mediaType = toNumber(node.media_type);
 
   if (productType === "clips" || node.is_reel === true) return "reel";
@@ -58,9 +57,8 @@ export function postFromNode(node: Json): PostData | null {
     (typeof node.code === "string" ? node.code : null);
   if (!shortcode) return null;
 
-  // The owner can hide like/view counts. Instagram then still emits a
-  // placeholder number (commonly a single digit), which would poison every
-  // statistic, so it is reported as unavailable instead.
+  // owner hid the likes. instagram still sends a small fake number
+  // so we throw it away instead of using it.
   const countsHidden = node.like_and_view_counts_disabled === true;
 
   const likes =
@@ -87,7 +85,6 @@ export function postFromNode(node: Json): PostData | null {
     likes: countsHidden ? null : likes,
     comments,
     views: countsHidden ? null : views,
-    // Instagram does not expose shares or saves to logged-out clients.
     shares: toNumber(node.reshare_count),
     saves: toNumber(node.save_count),
     shortcode,
@@ -157,7 +154,6 @@ function mergePosts(into: PostData[], incoming: PostData[]): void {
   }
 }
 
-/** Copies only the fields the target is still missing. */
 function fillPost(target: PostData, source: PostData): void {
   target.type = target.type === "unknown" ? source.type : target.type;
   target.publishedAt = target.publishedAt ?? source.publishedAt;
@@ -171,11 +167,6 @@ function fillPost(target: PostData, source: PostData): void {
   target.countsApproximate = target.countsApproximate ?? source.countsApproximate;
 }
 
-/**
- * Pagination past the first page uses the historical persisted-query hashes for
- * a user timeline. Instagram rotates and gates these, so when it declines we
- * keep whatever the first page gave us.
- */
 const TIMELINE_QUERY_HASHES = [
   "e769aa130647d2354c40ea6a439bfc08",
   "58b6785bea111c67129decbe6a448951",
@@ -314,7 +305,6 @@ interface PostDetailResult {
   commentSource: string | null;
 }
 
-/** Opens one post and harvests whatever its public documents contain. */
 async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
   const shortcode = post.shortcode ?? shortcodeFromUrl(post.url);
   const merged: PostData = { ...post };
@@ -327,15 +317,14 @@ async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
     const { body: html } = await httpGet(post.url);
     const blobs = collectEmbeddedJson(html);
 
-    // A post document carries several nodes under the same shortcode: small
-    // stubs for the preview blocks plus the full media object holding the
-    // counts. Merge them richest-first so a stub never masks real metrics.
     const mediaNodes: Json[] = [];
     for (const blob of blobs) {
       mediaNodes.push(
         ...deepCollect(blob, (n) => (n.shortcode === shortcode || n.code === shortcode) && looksLikeMediaNode(n)),
       );
     }
+    // the same shortcode shows up in a few nodes.
+    // the one with most keys has the real counts, so take that first.
     mediaNodes.sort((x, y) => Object.keys(y).length - Object.keys(x).length);
     for (const node of mediaNodes) {
       const parsed = postFromNode(node);
@@ -351,8 +340,7 @@ async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
     }
     if (comments.length > 0) commentSource = "post document (embedded JSON)";
 
-    // Last resort: the link preview. It rounds large counts ("203K"), so
-    // anything taken from here is marked approximate.
+    // last resort. this rounds big numbers to "203K" so we mark it as not exact.
     const desc = metaContent(html, "og:description") ?? metaContent(html, "description");
     const m = desc ? /([\d.,]+[KMB]?)\s+likes?,\s*([\d.,]+[KMB]?)\s+comments?/i.exec(desc) : null;
     if (m) {
@@ -375,11 +363,8 @@ async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
         /play_count\\?":\s*(\d+)/,
       ]);
   } catch {
-    // The embed document below may still work.
   }
 
-  // The embed is the only public surface still carrying a view count, so it is
-  // worth a second request for video content even when likes already arrived.
   const isVideoish = merged.type === "video" || merged.type === "reel" || merged.type === "unknown";
   const stillMissing =
     merged.likes === null ||
@@ -390,6 +375,8 @@ async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
   if (stillMissing && !isStopped()) {
     try {
       const { body: html } = await httpGet(
+        // only the embed page has view counts.
+        // it must be asked for as a normal page, an iframe request gets nothing.
         `https://www.instagram.com/p/${shortcode}/embed/captioned/`,
         { mode: "document" },
       );
@@ -430,11 +417,9 @@ async function collectPostDetail(post: PostData): Promise<PostDetailResult> {
         if (comments.length > 0) commentSource = "public embed document";
       }
     } catch {
-      // Nothing further to try for this post.
     }
   }
 
-  // A later source must not reintroduce a count the owner has hidden.
   if (merged.countsHidden === true) {
     merged.likes = null;
     merged.views = null;

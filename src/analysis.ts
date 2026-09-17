@@ -40,6 +40,7 @@ export function analyzeEngagement(posts: PostData[], followers: number | null): 
     for (const p of posts) {
       if (p.likes !== null) likeRates.push(p.likes / followers);
       if (p.comments !== null) commentRates.push(p.comments / followers);
+      // need both. using 0 for a missing one would make the rate look wrong.
       if (p.likes !== null && p.comments !== null) {
         engagementRates.push((p.likes + p.comments) / followers);
       }
@@ -287,7 +288,6 @@ export function analyzeComments(comments: CommentData[]): CommentAnalysis {
     .sort((a, b) => b.count - a.count);
   const duplicateCount = duplicateGroups.reduce((acc, g) => acc + g.count, 0);
 
-  // Near-duplicates are an O(n^2) pass, so the sample is capped.
   const sample = normalized.filter((n) => n.length >= 4).slice(0, THRESHOLDS.similarityPairCap);
   const grams = sample.map(trigrams);
   const nearDupMembers = new Set<number>();

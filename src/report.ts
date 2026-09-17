@@ -50,7 +50,6 @@ export function printWrapped(text: string, indent = ""): void {
   for (const l of wrap(text, WIDTH, indent)) out(l);
 }
 
-/** Prints "- text", aligning wrapped continuation lines under the text. */
 export function printBullet(text: string, indent = ""): void {
   wrap(text, WIDTH - indent.length - 2).forEach((l, i) => out(`${indent}${i === 0 ? "- " : "  "}${l}`));
 }
@@ -64,7 +63,6 @@ function statBlock(label: string, s: Stats): void {
   kv("  Sample size:", `${s.count} post(s)`, 26);
 }
 
-/** How much data supported the analysis, not how likely fraud is. */
 function overallConfidence(a: AnalysisBundle, findings: Finding[]): Severity {
   const postsWithLikes = a.posts.filter((p) => p.likes !== null).length;
   const hasFollowers = a.profile.followers !== null && a.profile.followers > 0;
@@ -348,7 +346,6 @@ function printConclusion(a: AnalysisBundle, findings: Finding[]): void {
   out();
   printWrapped("Confidence here describes how much data supported the analysis - not how likely fraud is.", "  ");
 
-  // A practical note for anyone deciding whether to work with this account.
   const hidden = a.posts.filter((p) => p.countsHidden === true).length;
   if (hidden > 0 && a.posts.length > 0 && hidden / a.posts.length >= THRESHOLDS.hiddenCountShareMedium) {
     out();

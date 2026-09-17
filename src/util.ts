@@ -54,7 +54,6 @@ export function safeDiv(a: number | null, b: number | null): number | null {
   return a / b;
 }
 
-/** Parses "1.2M", "182K" or "1,234". Returns null if unparseable. */
 export function parseHumanNumber(raw: string | null | undefined): number | null {
   if (!raw) return null;
   const s = raw.trim().replace(/,/g, "").replace(/\s/g, "");
@@ -86,7 +85,6 @@ export function unique<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-/** Keeps only usable numbers, so statistics skip unavailable metrics. */
 export function present(values: Array<number | null | undefined>): number[] {
   return values.filter((v): v is number => typeof v === "number" && Number.isFinite(v));
 }

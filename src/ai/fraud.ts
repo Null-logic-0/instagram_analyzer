@@ -115,7 +115,6 @@ function responseSchema(): Record<string, unknown> {
   };
 }
 
-/** Rounds floats so the prompt carries readable figures rather than 15 decimals. */
 function round(value: unknown): unknown {
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return null;
@@ -161,10 +160,6 @@ function asStringArray(value: unknown, limit = 12): string[] {
   return value.filter((v): v is string => typeof v === "string" && v.trim().length > 0).slice(0, limit);
 }
 
-/**
- * Hand-rolled validation, matching the project's existing style. Zod is not a
- * dependency here and the shape is small enough not to warrant one.
- */
 export function parseAnalysis(raw: unknown): AIFraudAnalysis | null {
   if (!isRecord(raw)) return null;
 
@@ -205,13 +200,6 @@ export function parseAnalysis(raw: unknown): AIFraudAnalysis | null {
   };
 }
 
-/**
- * Deterministic analysis first, then Ollama interprets the result. The model
- * never sees raw post or comment dumps, only the structured evidence object.
- *
- * Any failure here is contained: the caller still prints the full statistical
- * report, and the AI section explains why it was skipped.
- */
 export async function analyzeInfluencerWithAI(
   bundle: AnalysisBundle,
   findings: Finding[],
@@ -229,6 +217,7 @@ export async function analyzeInfluencerWithAI(
   const started = Date.now();
   const schema = responseSchema();
 
+  // second try asks for strict json only
   for (const strict of [false, true]) {
     try {
       const raw = await client.chatJson({

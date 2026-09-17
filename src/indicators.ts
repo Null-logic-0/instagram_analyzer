@@ -3,18 +3,10 @@ import { THRESHOLDS } from "./config.js";
 import type { Finding, Severity } from "./types.js";
 import { fmtInt, fmtNum, fmtPct, fmtText } from "./util.js";
 
-/**
- * Independent signals, each with its own evidence and confidence. None is a
- * verdict: every one lists the legitimate explanations alongside it, and the
- * report presents them as prompts for human investigation.
- */
 export function buildFindings(a: AnalysisBundle): Finding[] {
   const { engagement: eng, video, distribution: dist, commentAnalysis: ca } = a;
   const findings: Finding[] = [];
 
-  // Hiding like counts is an Instagram feature with many innocent uses, so
-  // this reports what it does to the AUDIT -- engagement stops being
-  // verifiable -- rather than asserting anything about how it was obtained.
   const hidden = a.posts.filter((p) => p.countsHidden === true).length;
   if (hidden > 0 && a.posts.length > 0) {
     const share = hidden / a.posts.length;
@@ -33,7 +25,6 @@ export function buildFindings(a: AnalysisBundle): Finding[] {
         `hidden by the account. Instagram emits a placeholder number for these, not a real count, so ` +
         `they are excluded from every like statistic in this report. ` +
         `Like-based figures therefore describe only the ${a.posts.length - hidden} remaining post(s).`,
-      // Directly observed from a flag Instagram sets, not inferred.
       confidence: "HIGH",
       observed: `${fmtPct(share, 1)} of analyzed posts hide their like counts.`,
       interpretation:
@@ -245,7 +236,6 @@ export function buildFindings(a: AnalysisBundle): Finding[] {
   if (eng.followersKnown && eng.medianEngagementRate !== null && eng.engagementRates.length >= 5) {
     const er = eng.medianEngagementRate;
     const followers = a.profile.followers!;
-    // Published benchmarks sit roughly in 1%-6% and decline with account size.
     const expectedHigh = followers > 1_000_000 ? 0.04 : followers > 100_000 ? 0.06 : 0.1;
     const expectedLow = 0.005;
 

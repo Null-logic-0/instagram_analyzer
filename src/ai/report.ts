@@ -17,16 +17,11 @@ function bandColor(band: ScoreBand): (s: string) => string {
   return c.green;
 }
 
-/** A 40-cell bar so the score reads at a glance. */
 function scoreBar(score: number): string {
   const filled = Math.round((score / 100) * 40);
   return `[${"#".repeat(filled)}${"-".repeat(40 - filled)}]`;
 }
 
-/**
- * The headline answer. Deterministic, so it prints whether or not the model
- * was reachable, and it always says the same thing for the same evidence.
- */
 export function printVerdict(score: SignalScore): void {
   section("                   FINAL VERDICT");
 
@@ -66,7 +61,6 @@ export function printVerdict(score: SignalScore): void {
   }
 }
 
-/** Renders the AI section. Called after the statistical report, never instead of it. */
 export function printAiReport(result: AIAnalysisResult): void {
   const ev = result.evidence;
 

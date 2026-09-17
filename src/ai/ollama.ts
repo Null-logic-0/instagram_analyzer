@@ -25,7 +25,6 @@ export interface ChatMessage {
 
 export interface ChatRequest {
   messages: ChatMessage[];
-  /** JSON schema passed to Ollama's structured-output support. */
   format?: Record<string, unknown>;
   options?: Record<string, unknown>;
 }
@@ -37,17 +36,12 @@ export interface OllamaStatus {
   detail: string;
 }
 
-/**
- * Minimal Ollama client. Local-only, so it has no throttle of its own: the
- * politeness delay in http.ts exists for Instagram, not for localhost.
- */
 export class OllamaClient {
   constructor(
     private readonly baseUrl = OLLAMA_BASE_URL,
     readonly model = OLLAMA_MODEL,
   ) {}
 
-  /** Checks the server is up and the configured model is installed. */
   async status(): Promise<OllamaStatus> {
     try {
       const body = await this.request("/api/tags", { method: "GET" });
@@ -95,7 +89,6 @@ export class OllamaClient {
     return message.content;
   }
 
-  /** Chats and parses JSON, tolerating a model that wraps output in prose or fences. */
   async chatJson(request: ChatRequest): Promise<unknown> {
     const content = await this.chat(request);
     const parsed = parseJsonLoosely(content);
@@ -155,7 +148,7 @@ export class OllamaClient {
   }
 }
 
-/** Accepts bare JSON, fenced JSON, or JSON with surrounding prose. */
+// some models wrap the json in text or code fences
 function parseJsonLoosely(content: string): unknown {
   const candidates = [content.trim()];
 
@@ -170,7 +163,6 @@ function parseJsonLoosely(content: string): unknown {
     try {
       return JSON.parse(candidate) as unknown;
     } catch {
-      // try the next shape
     }
   }
   return undefined;

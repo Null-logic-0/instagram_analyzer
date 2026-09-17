@@ -2,7 +2,6 @@ import { mean, median } from "../stats.js";
 import type { CommentData, PostData } from "../types.js";
 import { safeDiv, unique } from "../util.js";
 
-/** One account's footprint across the analyzed posts. */
 export interface CommenterActivity {
   username: string;
   postsCommentedOn: number;
@@ -12,19 +11,12 @@ export interface CommenterActivity {
 }
 
 export interface BehavioralFeatures {
-  /** Mean comments per commenting account. */
   commentsPerAccount: number | null;
-  /** Mean distinct posts a commenting account appears on. */
   postsEngagedWith: number | null;
-  /** Share of comments written by accounts that commented more than once. */
   repeatedCommentRatio: number | null;
-  /** Median gap, in seconds, between consecutive comments by the same account. */
   averageTimeBetweenActions: number | null;
-  /** Share of comments landing within BURST_WINDOW_S of another on the same post. */
   engagementBurstRate: number | null;
-  /** Comments per UTC hour, "00".."23". Empty when timestamps are unavailable. */
   activeTimeDistribution: Record<string, number>;
-  /** Accounts appearing on MANY_POSTS distinct posts or more. */
   accountsOnManyPosts: number;
   timestampsAvailable: boolean;
 }
@@ -39,31 +31,22 @@ export interface CoordinationEvidence {
   postsWithComments: number;
   distinctCommenters: number;
   topCommenters: CommenterActivity[];
-  /** Share of all comments from the top 1% / 5% / 10% of accounts. */
   concentrationTop1Pct: number | null;
   concentrationTop5Pct: number | null;
   concentrationTop10Pct: number | null;
-  /** Gini coefficient of comments per account: 0 even, 1 fully concentrated. */
   giniCoefficient: number | null;
-  /** Accounts appearing together on repeated posts, strongest first. */
   recurringPairs: CommenterPair[];
-  /** Mean distinct posts per account, over accounts seen on more than one. */
   averagePostsPerRepeatAccount: number | null;
 }
 
-/** Comments within this many seconds of each other on one post count as a burst. */
 const BURST_WINDOW_S = 60;
 
-/** An account on at least this many distinct posts is "recurring". */
 const MANY_POSTS = 3;
 
-/** A pair must co-occur on at least this many posts to be reported. */
 const MIN_SHARED_POSTS = 3;
 
-/** Pair detection is O(n^2) per post, so very large comment sets are capped. */
 const MAX_PAIR_ACCOUNTS = 400;
 
-/** Usernames are [A-Za-z0-9._], so a pipe cannot collide with one. */
 const PAIR_SEPARATOR = "|";
 
 function epochSeconds(iso: string | null): number | null {
@@ -115,7 +98,6 @@ export function buildBehavioralFeatures(
     hourly[hour] = (hourly[hour] ?? 0) + 1;
   }
 
-  // Median gap between consecutive comments by the same account.
   const perUserTimes = new Map<string, number[]>();
   for (const cm of named) {
     const ts = epochSeconds(cm.timestamp);
@@ -128,7 +110,6 @@ export function buildBehavioralFeatures(
     for (let i = 1; i < sorted.length; i += 1) gaps.push(sorted[i] - sorted[i - 1]);
   }
 
-  // Bursts: comments clustered tightly in time on the same post.
   const perPost = new Map<string, number[]>();
   for (const cm of named) {
     const ts = epochSeconds(cm.timestamp);
@@ -162,7 +143,6 @@ export function buildBehavioralFeatures(
   };
 }
 
-/** Share of all comments produced by the top `fraction` of accounts. */
 function topShare(sortedTotals: number[], fraction: number): number | null {
   if (sortedTotals.length === 0) return null;
   const total = sortedTotals.reduce((a, b) => a + b, 0);
@@ -180,7 +160,6 @@ function gini(values: number[]): number | null {
   return (2 * weighted) / (sorted.length * total) - (sorted.length + 1) / sorted.length;
 }
 
-/** Accounts that keep showing up on the same posts as each other. */
 function findRecurringPairs(comments: CommentData[]): CommenterPair[] {
   const byPost = new Map<string, Set<string>>();
   for (const cm of comments) {
@@ -231,7 +210,6 @@ export function buildCoordinationEvidence(
   };
 }
 
-/** Posting cadence, which gives the model context for judging engagement bursts. */
 export interface PostingRhythm {
   postsWithDates: number;
   medianHoursBetweenPosts: number | null;

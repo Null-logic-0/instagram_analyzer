@@ -24,7 +24,6 @@ export function median(v: number[]): number | null {
   return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid];
 }
 
-/** Linear-interpolated quantile, p in [0, 1]. */
 export function quantile(v: number[], p: number): number | null {
   if (v.length === 0) return null;
   const s = [...v].sort((a, b) => a - b);

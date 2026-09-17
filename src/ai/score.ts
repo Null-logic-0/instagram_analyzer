@@ -5,29 +5,20 @@ export type ScoreBand = "CLEAN" | "LOW" | "MIXED" | "STRONG";
 
 export interface ScoreComponent {
   name: string;
-  /** Share of the total score this component can contribute. */
   weight: number;
-  /** 0..1 within this component, or null when the data was unavailable. */
   value: number | null;
-  /** The measured figure this score came from. */
   evidence: string;
 }
 
 export interface SignalScore {
-  /** 0-100. Higher means more signals consistent with artificial engagement. */
   score: number;
   band: ScoreBand;
   verdict: string;
-  /** Share of the weighting that had data behind it. */
   coverage: number;
   components: ScoreComponent[];
   missing: string[];
 }
 
-/**
- * Scales a measurement into 0..1 between a floor and a ceiling.
- * At or below `floor` scores 0; at or above `ceiling` scores 1.
- */
 function ramp(value: number | null, floor: number, ceiling: number): number | null {
   if (value === null || !Number.isFinite(value)) return null;
   if (ceiling === floor) return 0;
@@ -38,16 +29,6 @@ function pct(value: number | null, digits = 1): string {
   return value === null ? "unavailable" : `${(value * 100).toFixed(digits)}%`;
 }
 
-/**
- * A transparent, deterministic index of how many independent signals point at
- * artificial or coordinated engagement. Computed in TypeScript, never by the
- * model, so the same evidence always produces the same number.
- *
- * It scores SIGNAL STRENGTH in the collected sample. It is not an estimate of
- * what share of an audience is fake: nothing here can measure that, and any
- * component whose data is missing is excluded rather than scored zero, so a
- * thin sample cannot masquerade as a clean result.
- */
 export function scoreEvidence(ev: FraudEvidence): SignalScore {
   const { comments: cm, coordination: co, behavioral: bh, engagement: en } = ev;
   const hasComments = cm.available && cm.total >= 20;
@@ -116,8 +97,8 @@ export function scoreEvidence(ev: FraudEvidence): SignalScore {
     },
   ];
 
-  // Components without data are dropped rather than scored zero, so missing
-  // evidence never reads as a clean account.
+  // no data means skip, not zero.
+  // otherwise an account we know nothing about looks clean.
   const scored = components.filter((c) => c.value !== null);
   const availableWeight = scored.reduce((sum, c) => sum + c.weight, 0);
   const totalWeight = components.reduce((sum, c) => sum + c.weight, 0);

@@ -40,7 +40,6 @@ export interface EngagementEvidence {
   likeToViewRatio: number | null;
   commentToViewRatio: number | null;
   likesPerComment: number | null;
-  /** Dispersion, which is what outlier judgements rest on. */
   likeStdDev: number | null;
   likeCoefficientOfVariation: number | null;
   likeIqr: number | null;
@@ -64,12 +63,9 @@ export interface CommentEvidence {
   medianLength: number | null;
   repeatedPhrases: { phrase: string; count: number }[];
   representativeComments: string[];
-  /** Deduplicated; a repeated text is suffixed with "[repeated Nx]". */
-  /** Why the sample is partial, so the model does not over-read it. */
   samplingNote: string;
 }
 
-/** Placeholder until the project persists snapshots between runs. */
 export interface HistoricalEvidence {
   available: boolean;
   note: string;
@@ -84,15 +80,9 @@ export interface FraudEvidence {
   rhythm: PostingRhythm;
   historical: HistoricalEvidence;
   anomalies: Finding[];
-  /** Deterministic signal score, computed here and never by the model. */
   signalScore: SignalScore;
 }
 
-/**
- * Turns the deterministic analysis into the evidence object the model reasons
- * over. Everything numeric is computed here, in TypeScript, so the model never
- * has to calculate anything and has no excuse to invent a figure.
- */
 export function buildEvidence(bundle: AnalysisBundle, findings: Finding[]): FraudEvidence {
   const { profile, posts, comments, engagement, video, distribution, commentAnalysis: ca } = bundle;
 
@@ -169,11 +159,9 @@ export function buildEvidence(bundle: AnalysisBundle, findings: Finding[]): Frau
       note: "This tool does not persist snapshots between runs, so follower and engagement growth over time cannot be assessed.",
     },
 
-    // The deterministic indicators, handed over as-is so the model weighs the
-    // same findings the statistical report already printed.
     anomalies: findings,
 
-    // Placeholder; replaced below once the rest of the evidence exists.
+    // score needs the finished evidence, so it is filled in below
     signalScore: EMPTY_SCORE,
   };
 

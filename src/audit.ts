@@ -20,13 +20,6 @@ import { c } from "./util.js";
 
 const write = (s: string) => process.stdout.write(s);
 
-/**
- *   profile URL -> profile -> posts -> metrics -> comments
- *               -> analysis -> anomalies -> report
- *
- * Every stage records what it obtained, and a stage that fails does not stop
- * the report: whatever was legitimately collected is still analyzed.
- */
 export async function runAudit(input: string): Promise<void> {
   const nodeMajor = Number.parseInt(process.versions.node.split(".")[0] ?? "0", 10);
   if (nodeMajor < 18) {
@@ -104,9 +97,7 @@ export async function runAudit(input: string): Promise<void> {
   const findings = buildFindings(bundle);
   printReport(bundle, findings);
 
-  // The AI layer interprets the evidence the deterministic analysis produced.
-  // It runs last and cannot affect anything above it: a failure here still
-  // leaves the full statistical report on screen.
+  // ai runs last. if it fails the report above is already on screen.
   if (AI_ENABLED) {
     write(c.dim("  Running AI fraud analysis...\n"));
     try {

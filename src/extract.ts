@@ -32,7 +32,6 @@ export function collectEmbeddedJson(html: string): unknown[] {
     try {
       out.push(JSON.parse(m[1]));
     } catch {
-      // Not every block is complete or parseable; skip it.
     }
   }
 
@@ -46,7 +45,6 @@ export function collectEmbeddedJson(html: string): unknown[] {
     try {
       out.push(JSON.parse(hit[1]));
     } catch {
-      // Same as above.
     }
   }
   return out;

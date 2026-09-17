@@ -69,7 +69,6 @@ export function emptyProfile(username: string, profileUrl: string): ProfileData 
   };
 }
 
-/** Newer payloads carry the website under `bio_links` instead of `external_url`. */
 function firstBioLink(links: unknown): string | null {
   if (!Array.isArray(links)) return null;
   for (const link of links) {
@@ -80,7 +79,6 @@ function firstBioLink(links: unknown): string | null {
   return null;
 }
 
-/** Maps a user node, in any of its several shapes, onto ProfileData. */
 function profileFromUserNode(node: Json, base: ProfileData): ProfileData {
   const followers = toNumber((node.edge_followed_by as Json)?.count) ?? toNumber(node.follower_count);
   const following = toNumber((node.edge_follow as Json)?.count) ?? toNumber(node.following_count);
@@ -135,7 +133,8 @@ function looksLikeUserNode(n: Json): boolean {
   );
 }
 
-
+// the page also has "suggested accounts" with their own follower counts.
+// match on username so we never read the wrong numbers.
 function userNodesFor(root: unknown, username: string): Json[] {
   return deepCollect(
     root,
@@ -147,7 +146,6 @@ export interface ProfileResult {
   profile: ProfileData;
   seedPosts: PostData[];
   endCursor: string | null;
-  /** Reused by post discovery so the document is only fetched once. */
   profileHtml: string | null;
 }
 

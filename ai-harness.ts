@@ -1,10 +1,3 @@
-/**
- * Exercises the AI fraud layer against synthetic data, with no network calls to
- * Instagram. Useful for iterating on prompts and features without a 3-minute
- * live audit.
- *
- *   npx tsx ai-harness.ts
- */
 
 import {
   analyzeComments,
@@ -19,8 +12,6 @@ import { printAiReport } from "./src/ai/report.js";
 import { buildFindings } from "./src/indicators.js";
 import type { CommentData, PostData, ProfileData } from "./src/types.js";
 
-// A deliberately suspicious account: a tight commenter clique posting near
-// identical text within seconds of each other, plus one viral outlier.
 const BASE_TS = Date.parse("2026-09-01T12:00:00Z") / 1000;
 
 const posts: PostData[] = Array.from({ length: 12 }, (_, i) => ({

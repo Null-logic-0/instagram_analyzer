@@ -30,11 +30,8 @@ export interface PostData {
   shares: number | null;
   saves: number | null;
 
-  /** Used for follow-up requests; not part of the reported shape. */
   shortcode?: string;
-  /** The owner hid like/view counts, so any number in the markup is a placeholder. */
   countsHidden?: boolean;
-  /** A count came from a rounded link preview ("203K"), not an exact value. */
   countsApproximate?: boolean;
 }
 
