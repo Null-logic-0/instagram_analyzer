@@ -1,4 +1,4 @@
-import { RULE, kv, out, printBullet, printWrapped, section, severityTag } from "../report.js";
+import { RULE, kv, note, out, printBullet, printWrapped, section, severityTag } from "../report.js";
 import { c, fmtInt, fmtNum, fmtPct } from "../util.js";
 import type { AIAnalysisResult } from "./fraud.js";
 import type { ScoreBand, SignalScore } from "./score.js";
@@ -27,7 +27,9 @@ export function printVerdict(score: SignalScore): void {
 
   const tint = bandColor(score.band);
   kv("Bot / fake-engagement score:", tint(c.bold(`${score.score} / 100`)), 30);
+  note("0 means nothing suspicious was found. 100 means many suspicious things were found at once.");
   kv("Band:", tint(c.bold(score.band)), 30);
+  note("CLEAN = looks normal. LOW = weak signs. MIXED = part of it may be fake. STRONG = many signs, be careful.");
   out();
   out(`  ${tint(scoreBar(score.score))}`);
   out(c.dim("   0 = no signals                        100 = strong signals"));
@@ -40,6 +42,9 @@ export function printVerdict(score: SignalScore): void {
   );
 
   heading("SCORE BREAKDOWN");
+  out(c.dim("  each line is one check. left number is the points it gave,"));
+  out(c.dim("  right number is the most it could give. under it is why."));
+  out();
   for (const component of score.components) {
     if (component.value === null) continue;
     const points = component.weight * component.value;
@@ -87,7 +92,9 @@ export function printAiReport(result: AIAnalysisResult): void {
   const tone = (s: string) => (s === "HIGH" ? c.red(s) : s === "MEDIUM" ? c.yellow(s) : c.green(s));
 
   kv("Assessment:", tone(analysis.assessment), 14);
+  note("how much the ai thinks this account needs a closer look");
   kv("Confidence:", tone(analysis.confidence), 14);
+  note("how much data there was to judge from. not how likely fraud is.");
   out();
   out(c.dim(`  model: ${result.model} · ${(result.durationMs / 1000).toFixed(1)}s`));
 

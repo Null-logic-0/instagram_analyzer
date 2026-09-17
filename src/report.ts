@@ -46,6 +46,10 @@ export function wrap(text: string, width = WIDTH, indent = ""): string[] {
   return lines;
 }
 
+export function note(text: string): void {
+  for (const line of wrap(text, WIDTH - 6, "")) out(c.dim(`      ${line}`));
+}
+
 export function printWrapped(text: string, indent = ""): void {
   for (const l of wrap(text, WIDTH, indent)) out(l);
 }
@@ -56,11 +60,17 @@ export function printBullet(text: string, indent = ""): void {
 
 function statBlock(label: string, s: Stats): void {
   kv(`  Average ${label}:`, fmtInt(s.mean), 26);
+  note(`all ${label} added up, divided by the number of posts`);
   kv(`  Median ${label}:`, c.bold(fmtInt(s.median)), 26);
+  note("the middle post. one viral post cannot drag this up, so it describes a normal post better than the average.");
   kv(`  Min ${label}:`, fmtInt(s.min), 26);
+  note("the worst post");
   kv(`  Max ${label}:`, fmtInt(s.max), 26);
+  note("the best post");
   kv("  Std deviation:", fmtInt(s.stdDev), 26);
+  note(`how much ${label} jump around between posts. small means every post gets about the same.`);
   kv("  Sample size:", `${s.count} post(s)`, 26);
+  note("how many posts these numbers come from");
 }
 
 function overallConfidence(a: AnalysisBundle, findings: Finding[]): Severity {
@@ -141,11 +151,14 @@ function printEngagement(a: AnalysisBundle): void {
   } else {
     kv("  Average like rate:", fmtPct(eng.avgLikeRate, 3), 26);
     kv("  Median like rate:", c.bold(fmtPct(eng.medianLikeRate, 3)), 26);
+    note("out of 100 followers, how many press like on a post");
     kv("  Average comment rate:", fmtPct(eng.avgCommentRate, 3), 26);
     kv("  Median comment rate:", c.bold(fmtPct(eng.medianCommentRate, 3)), 26);
+    note("out of 100 followers, how many write a comment");
     out();
     kv("  Average engagement:", fmtPct(eng.avgEngagementRate, 3), 26);
     kv("  Median engagement:", c.bold(c.green(fmtPct(eng.medianEngagementRate, 3))), 26);
+    note("likes and comments together, as a share of followers. this is the number brands usually ask for.");
     out();
     printWrapped(
       "The MEDIAN engagement rate is the headline figure: a single viral post can inflate the average well beyond what a typical post achieves.",
@@ -154,6 +167,7 @@ function printEngagement(a: AnalysisBundle): void {
   }
   out();
   kv("Likes per comment:", fmtNum(eng.likesPerComment, 1), 26);
+  note("how many likes arrive for each single comment. very high means people scroll and like but do not talk.");
 }
 
 function printVideo(a: AnalysisBundle): void {
@@ -176,9 +190,13 @@ function printVideo(a: AnalysisBundle): void {
   kv("Median comments (video):", fmtInt(video.commentStatsForVideos.median), 26);
   out();
   kv("View / like ratio:", fmtNum(video.medianViewToLike, 1), 26);
+  note("how many people watch before one of them likes it");
   kv("View / comment ratio:", fmtNum(video.medianViewToComment, 1), 26);
+  note("how many people watch before one of them comments");
   kv("Like / view rate:", c.bold(fmtPct(video.medianLikeToViewRate, 2)), 26);
+  note("out of 100 viewers, how many press like. normally somewhere between 1 and 25.");
   kv("Comment / view rate:", c.bold(fmtPct(video.medianCommentToViewRate, 2)), 26);
+  note("out of 100 viewers, how many write a comment. always much smaller than likes.");
   out();
   printWrapped(
     "Unusual relationships between views and engagement are reported as anomalies, not as evidence of fake engagement.",
@@ -198,15 +216,24 @@ function printDistribution(a: AnalysisBundle): void {
   }
 
   kv("Median likes:", fmtInt(dist.stats.median), 26);
+  note("the middle post");
   kv("Q1 / Q3:", `${fmtInt(dist.stats.q1)} / ${fmtInt(dist.stats.q3)}`, 26);
+  note("a quarter of posts get less than the first number, a quarter get more than the second. most posts sit between them.");
   kv("IQR:", fmtInt(dist.stats.iqr), 26);
+  note("the gap between those two. the normal range of this account.");
   kv("MAD:", fmtInt(dist.stats.mad), 26);
+  note("typical distance from the middle post. used instead of the average because one huge post cannot break it.");
   kv("Coefficient of variation:", fmtNum(dist.stats.cv, 3), 26);
+  note("how uneven the posts are. near 0 means every post gets almost the same, which is unusual for real reach.");
   kv("Top post / median:", dist.topMultipleOfMedian !== null ? `${fmtNum(dist.topMultipleOfMedian, 1)}x` : NA, 26);
+  note("how many times bigger the best post is than a normal one");
   kv("Top post share of likes:", fmtPct(dist.topPostShare, 1), 26);
+  note("how much of all the likes came from that single post");
   out();
   out(c.bold(`Statistical outliers detected: ${dist.outliers.length}`));
+  note("posts that sit far outside the normal range for this account");
   out(c.dim("  Methods: z-score, MAD-based modified z-score, 1.5x IQR fence."));
+  note("z and mz say how far a post is from normal. above 3 is far. a post can be far out for good reasons.");
   out();
 
   for (const o of dist.outliers.slice(0, 5)) {
@@ -243,19 +270,32 @@ function printComments(a: AnalysisBundle): void {
   }
 
   kv("Comments analyzed:", fmtInt(ca.total), 32);
+  note("how many comments we could read");
   kv("Posts covered:", fmtInt(ca.postsCovered), 32);
+  note("how many posts those comments came from");
   kv("Unique commenters:", fmtInt(ca.uniqueCommenters), 32);
+  note("how many different accounts wrote them");
   kv("Unique commenter share:", fmtPct(ca.uniqueCommenterPct, 1), 32);
+  note("high means lots of different people. low means the same few keep writing.");
   kv("Repeated commenters:", fmtInt(ca.repeatedCommenters), 32);
+  note("accounts that wrote more than one comment");
   kv("Repeated commenter share:", fmtPct(ca.repeatedCommenterPct, 1), 32);
+  note("what part of the commenters they are");
   kv("Comments from repeaters:", fmtPct(ca.repeatCommentShare, 1), 32);
+  note("what part of all comments they wrote. if a few accounts write most of them, that is worth a look.");
   out();
   kv("Duplicate comments:", `${fmtInt(ca.duplicateCount)} (${fmtPct(ca.duplicateShare, 1)})`, 32);
+  note("exactly the same text written more than once");
   kv("Near-duplicate share:", fmtPct(ca.nearDuplicateShare, 1), 32);
+  note("almost the same text, small changes only");
   kv("Emoji-only comments:", fmtInt(ca.emojiOnly), 32);
+  note("comments with no words, only emoji");
   kv("Very short comments:", fmtInt(ca.veryShort), 32);
+  note("four letters or fewer, like \"nice\"");
   kv("Generic comments:", `${fmtInt(ca.genericCount)} (${fmtPct(ca.genericShare, 1)})`, 32);
+  note("empty praise, emoji only, or very short. normal people write a lot of these, so on its own it means little.");
   kv("Median comment length:", `${fmtInt(ca.medianLength)} chars`, 32);
+  note("how long a typical comment is, in letters");
 
   if (ca.topCommenters.length > 0) {
     out();
