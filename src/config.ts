@@ -34,6 +34,20 @@ export const USER_AGENT =
 export const IG_WEB_APP_ID = "936619743392459";
 
 
+/**
+ * AI fraud-analysis layer. The deterministic analysis always runs; Ollama only
+ * interprets the evidence it produces. With Ollama unreachable the audit
+ * completes exactly as before and the AI section reports why it was skipped.
+ */
+export const AI_ENABLED = true;
+export const OLLAMA_BASE_URL = "http://localhost:11434";
+export const OLLAMA_MODEL = "llama3.2";
+export const OLLAMA_TIMEOUT_MS = 120_000;
+export const OLLAMA_RETRIES = 1;
+
+/** Upper bound on comments included in the representative AI sample. */
+export const MAX_AI_COMMENTS = 100;
+
 /** Detection thresholds. Heuristics chosen for this tool, not industry standards. */
 export const THRESHOLDS = {
   zScoreOutlier: 3.0,

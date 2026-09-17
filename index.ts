@@ -8,7 +8,7 @@ import { runAudit } from "./src/audit.js";
 import { c } from "./src/util.js";
 
 // The only line you need to change.
-const USERNAME = "saliparteliani";
+const USERNAME = "annloladze";
 const INSTAGRAM_PROFILE_URL = `https://www.instagram.com/${USERNAME}/`;
 
 const target = process.argv[2] ?? INSTAGRAM_PROFILE_URL;

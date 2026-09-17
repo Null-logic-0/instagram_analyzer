@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "audit": "tsx index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ai-harness": "tsx ai-harness.ts"
   },
   "devDependencies": {
     "@types/node": "^22",
